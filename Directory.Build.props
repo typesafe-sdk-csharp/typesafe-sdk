@@ -9,7 +9,7 @@
     <Description>Unofficial .NET integration for TypeSafe AI.</Description>
     <Deterministic>true</Deterministic>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <RepositoryUrl>https://github.com/anktsrkr/typesafe-csharp-sdk</RepositoryUrl>
+    <RepositoryUrl>https://github.com/typesafe-sdk-csharp/typesafe-sdk</RepositoryUrl>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <IncludeSymbols>true</IncludeSymbols>
@@ -21,6 +21,7 @@
     <!-- Zero-reflection / NativeAOT policy: AOT analyzers run on every shippable project.
          Test projects opt out (they legitimately reflect) via IsAotCompatible=false. -->
     <MinVerTagPrefix>v</MinVerTagPrefix>
+    <MinVerMinimumMajorMinor>1.0</MinVerMinimumMajorMinor>
     <MinVerDefaultPreReleaseIdentifiers>preview.0</MinVerDefaultPreReleaseIdentifiers>
     <IsAotCompatible>true</IsAotCompatible>
   </PropertyGroup>

@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       version_tag:
-        description: 'Release version tag to cut (e.g. v0.3.0)'
+        description: 'Release version tag to cut (e.g. v1.0.0)'
         required: true
         type: string
 
@@ -72,6 +72,7 @@ jobs:
     permissions:
       contents: write
       packages: write
+      id-token: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -86,11 +87,18 @@ jobs:
         with:
           global-json-file: global.json
 
+      - name: Log in to NuGet via OIDC (Trusted Publishing)
+        if: vars.NUGET_USERNAME != '' || secrets.NUGET_USERNAME != ''
+        id: nuget_login
+        uses: NuGet/login@v1
+        with:
+          user: ${{ vars.NUGET_USERNAME || secrets.NUGET_USERNAME }}
+
       - name: Create GitHub Release and Deploy to NuGet
         env:
           TAG: ${{ needs.build-ga-package.outputs.release_tag }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+          NUGET_API_KEY: ${{ steps.nuget_login.outputs.NUGET_API_KEY || secrets.NUGET_API_KEY }}
           PACKAGE_OWNER: ${{ github.repository_owner }}
         run: |
           echo "==> Creating GitHub Release with auto-generated notes for $TAG..."

@@ -1,7 +1,7 @@
 # TypeSafe .NET SDK (TypeSafe.AI)
 
-[![CI](https://github.com/anktsrkr/typesafe-csharp-sdk/actions/workflows/ci.yml/badge.svg)](https://github.com/anktsrkr/typesafe-csharp-sdk/actions/workflows/ci.yml)
-[![Release & Publish](https://github.com/anktsrkr/typesafe-csharp-sdk/actions/workflows/release.yml/badge.svg)](https://github.com/anktsrkr/typesafe-csharp-sdk/actions/workflows/release.yml)
+[![CI](https://github.com/typesafe-sdk-csharp/typesafe-sdk/actions/workflows/ci.yml/badge.svg)](https://github.com/typesafe-sdk-csharp/typesafe-sdk/actions/workflows/ci.yml)
+[![Release & Publish](https://github.com/typesafe-sdk-csharp/typesafe-sdk/actions/workflows/release.yml/badge.svg)](https://github.com/typesafe-sdk-csharp/typesafe-sdk/actions/workflows/release.yml)
 [![NuGet Version](https://img.shields.io/nuget/v/TypeSafe.AI.svg?style=flat&logo=nuget)](https://www.nuget.org/packages/TypeSafe.AI)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![.NET](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet)](https://dotnet.microsoft.com/)
@@ -40,7 +40,7 @@ Preview builds are published on every pull request via GitHub Packages. To consu
 <configuration>
   <packageSources>
     <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
-    <add key="github" value="https://nuget.pkg.github.com/anktsrkr/index.json" />
+    <add key="github" value="https://nuget.pkg.github.com/typesafe-sdk-csharp/index.json" />
   </packageSources>
   <packageSourceCredentials>
     <github>
@@ -377,8 +377,8 @@ project-typesafe-csharp-sdk/
 
 ```bash
 # Clone the repository
-git clone https://github.com/anktsrkr/typesafe-csharp-sdk.git
-cd typesafe-csharp-sdk
+git clone https://github.com/typesafe-sdk-csharp/typesafe-sdk.git
+cd typesafe-sdk
 
 # Restore dependencies
 dotnet restore
