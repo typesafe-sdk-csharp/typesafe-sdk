@@ -87,12 +87,21 @@ jobs:
         with:
           global-json-file: global.json
 
+      - name: Determine NuGet User
+        id: nuget_user
+        env:
+          VAR_USER: ${{ vars.NUGET_USERNAME }}
+          SECRET_USER: ${{ secrets.NUGET_USERNAME }}
+        run: |
+          RESOLVED_USER="${VAR_USER:-$SECRET_USER}"
+          echo "username=$RESOLVED_USER" >> $GITHUB_OUTPUT
+
       - name: Log in to NuGet via OIDC (Trusted Publishing)
-        if: vars.NUGET_USERNAME != '' || secrets.NUGET_USERNAME != ''
+        if: steps.nuget_user.outputs.username != ''
         id: nuget_login
         uses: NuGet/login@v1
         with:
-          user: ${{ vars.NUGET_USERNAME || secrets.NUGET_USERNAME }}
+          user: ${{ steps.nuget_user.outputs.username }}
 
       - name: Create GitHub Release and Deploy to NuGet
         env:
