@@ -110,13 +110,21 @@ jobs:
           NUGET_API_KEY: ${{ steps.nuget_login.outputs.NUGET_API_KEY || secrets.NUGET_API_KEY }}
           PACKAGE_OWNER: ${{ github.repository_owner }}
         run: |
-          echo "==> Creating GitHub Release with auto-generated notes for $TAG..."
-          gh release create "$TAG" artifacts/ga-packages/* --generate-notes
+          echo "==> Creating or updating GitHub Release for $TAG..."
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG already exists; uploading artifacts..."
+            gh release upload "$TAG" artifacts/ga-packages/* --clobber || true
+          else
+            gh release create "$TAG" artifacts/ga-packages/* --generate-notes
+          fi
 
           echo "==> Publishing to NuGet.org and GitHub Packages..."
           for file in artifacts/ga-packages/*.nupkg; do
             if [ -n "$NUGET_API_KEY" ]; then
               dotnet nuget push "$file" --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate
+            else
+              echo "::error::Neither OIDC login nor NUGET_API_KEY provided a valid NuGet token! Aborting NuGet.org push."
+              exit 1
             fi
             dotnet nuget push "$file" --api-key "$GH_TOKEN" --source "https://nuget.pkg.github.com/${PACKAGE_OWNER}/index.json" --skip-duplicate
           done
