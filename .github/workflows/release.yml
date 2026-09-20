@@ -35,8 +35,10 @@ jobs:
           if [ -n "$INPUT_TAG" ]; then
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
-            git tag "$INPUT_TAG"
-            git push origin "$INPUT_TAG"
+            if ! git rev-parse -q --verify "refs/tags/$INPUT_TAG" >/dev/null 2>&1; then
+              git tag "$INPUT_TAG"
+              git push origin "$INPUT_TAG"
+            fi
             echo "tag=$INPUT_TAG" >> $GITHUB_OUTPUT
           else
             TAG="${GITHUB_REF#refs/tags/}"
