@@ -75,6 +75,7 @@ public sealed class TypeSafeClientOptions
     }
 
     /// <summary>Creates options with the environment aliases applied.</summary>
+    /// <returns>A new <see cref="TypeSafeClientOptions"/> populated from environment variables.</returns>
     public static TypeSafeClientOptions FromEnvironment()
     {
         var options = new TypeSafeClientOptions();

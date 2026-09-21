@@ -14,6 +14,8 @@ namespace TypeSafe.AI;
 public static class Questions
 {
     /// <summary>Builds the questions map through a chained builder lambda.</summary>
+    /// <param name="build">The builder delegate that configures questions.</param>
+    /// <returns>An immutable dictionary of validated questions keyed by question id.</returns>
     public static IReadOnlyDictionary<string, TypeSafeQuestion> Build(
         Func<QuestionBuilder, QuestionBuilder> build)
     {
@@ -34,6 +36,11 @@ public sealed class QuestionBuilder
     }
 
     /// <summary>Adds a yes/no question. Optional outcome descriptions map to the documented true/false criteria.</summary>
+    /// <param name="id">The unique identifier for the question.</param>
+    /// <param name="instructions">The text instructions for what to evaluate.</param>
+    /// <param name="whenTrue">Optional criteria for an affirmative (true) outcome.</param>
+    /// <param name="whenFalse">Optional criteria for a negative (false) outcome.</param>
+    /// <returns>This builder instance for chaining.</returns>
     public QuestionBuilder Noul(string id, string instructions,
         string? whenTrue = null, string? whenFalse = null)
     {
@@ -44,6 +51,11 @@ public sealed class QuestionBuilder
     }
 
     /// <summary>Adds a yes/no question with structured instructions and optional structured criteria.</summary>
+    /// <param name="id">The unique identifier for the question.</param>
+    /// <param name="instructions">The structured instructions for what to evaluate.</param>
+    /// <param name="whenTrue">Optional structured criteria for an affirmative (true) outcome.</param>
+    /// <param name="whenFalse">Optional structured criteria for a negative (false) outcome.</param>
+    /// <returns>This builder instance for chaining.</returns>
     public QuestionBuilder Noul(string id, TypeSafeContent instructions,
         TypeSafeContent? whenTrue = null, TypeSafeContent? whenFalse = null)
     {
@@ -54,18 +66,29 @@ public sealed class QuestionBuilder
     }
 
     /// <summary>Adds a yes/no question with pre-built criteria.</summary>
+    /// <param name="id">The unique identifier for the question.</param>
+    /// <param name="instructions">The structured instructions for what to evaluate.</param>
+    /// <param name="criteria">The pre-built criteria object.</param>
+    /// <returns>This builder instance for chaining.</returns>
     public QuestionBuilder Noul(string id, TypeSafeContent instructions, NoulCriteria criteria)
     {
         ArgumentNullException.ThrowIfNull(criteria);
         return Add(id, new Noul { Instructions = instructions, Criteria = criteria });
     }
 
-
     /// <summary>Adds a choice question with undescribed labels.</summary>
+    /// <param name="id">The unique identifier for the question.</param>
+    /// <param name="instructions">The text instructions for what to evaluate.</param>
+    /// <param name="labels">The option labels to choose among.</param>
+    /// <returns>This builder instance for chaining.</returns>
     public QuestionBuilder Choice(string id, string instructions, params string[] labels)
         => Choice(id, TypeSafeContent.FromString(instructions), labels);
 
     /// <summary>Adds a choice question with structured instructions and undescribed labels.</summary>
+    /// <param name="id">The unique identifier for the question.</param>
+    /// <param name="instructions">The structured instructions for what to evaluate.</param>
+    /// <param name="labels">The option labels to choose among.</param>
+    /// <returns>This builder instance for chaining.</returns>
     public QuestionBuilder Choice(string id, TypeSafeContent instructions, params string[] labels)
     {
         ArgumentNullException.ThrowIfNull(labels);
@@ -80,10 +103,18 @@ public sealed class QuestionBuilder
     }
 
     /// <summary>Adds a choice question whose options are described through a sub-builder lambda.</summary>
+    /// <param name="id">The unique identifier for the question.</param>
+    /// <param name="instructions">The text instructions for what to evaluate.</param>
+    /// <param name="options">The sub-builder delegate configuring choice options and descriptions.</param>
+    /// <returns>This builder instance for chaining.</returns>
     public QuestionBuilder Choice(string id, string instructions, Func<ChoiceOptions, ChoiceOptions> options)
         => Choice(id, TypeSafeContent.FromString(instructions), options);
 
     /// <summary>Adds a choice question with structured instructions whose options are described through a sub-builder lambda.</summary>
+    /// <param name="id">The unique identifier for the question.</param>
+    /// <param name="instructions">The structured instructions for what to evaluate.</param>
+    /// <param name="options">The sub-builder delegate configuring choice options and descriptions.</param>
+    /// <returns>This builder instance for chaining.</returns>
     public QuestionBuilder Choice(string id, TypeSafeContent instructions, Func<ChoiceOptions, ChoiceOptions> options)
     {
         ArgumentNullException.ThrowIfNull(options);
@@ -92,12 +123,19 @@ public sealed class QuestionBuilder
         return Add(id, new Choice { Instructions = instructions, Criteria = choiceOptions.ToCriteria() });
     }
 
-
     /// <summary>Adds a rubric question with text levels.</summary>
+    /// <param name="id">The unique identifier for the question.</param>
+    /// <param name="instructions">The text instructions for what to evaluate.</param>
+    /// <param name="levels">The text labels for each rubric level.</param>
+    /// <returns>This builder instance for chaining.</returns>
     public QuestionBuilder Score(string id, string instructions, params string[] levels)
         => Score(id, TypeSafeContent.FromString(instructions), levels);
 
     /// <summary>Adds a rubric question with structured instructions and text levels.</summary>
+    /// <param name="id">The unique identifier for the question.</param>
+    /// <param name="instructions">The structured instructions for what to evaluate.</param>
+    /// <param name="levels">The text labels for each rubric level.</param>
+    /// <returns>This builder instance for chaining.</returns>
     public QuestionBuilder Score(string id, TypeSafeContent instructions, params string[] levels)
     {
         ArgumentNullException.ThrowIfNull(levels);
@@ -111,6 +149,10 @@ public sealed class QuestionBuilder
     }
 
     /// <summary>Adds a rubric question with structured instructions and structured levels.</summary>
+    /// <param name="id">The unique identifier for the question.</param>
+    /// <param name="instructions">The structured instructions for what to evaluate.</param>
+    /// <param name="levels">The structured content for each rubric level.</param>
+    /// <returns>This builder instance for chaining.</returns>
     public QuestionBuilder Score(string id, TypeSafeContent instructions, params TypeSafeContent[] levels)
     {
         ArgumentNullException.ThrowIfNull(levels);
@@ -123,12 +165,19 @@ public sealed class QuestionBuilder
         return Add(id, new Score { Instructions = instructions, Criteria = criteria });
     }
 
-
     /// <summary>Adds a rubric question whose levels are built through a sub-builder lambda.</summary>
+    /// <param name="id">The unique identifier for the question.</param>
+    /// <param name="instructions">The text instructions for what to evaluate.</param>
+    /// <param name="levels">The sub-builder delegate configuring rubric levels.</param>
+    /// <returns>This builder instance for chaining.</returns>
     public QuestionBuilder Score(string id, string instructions, Func<ScoreLevels, ScoreLevels> levels)
         => Score(id, TypeSafeContent.FromString(instructions), levels);
 
     /// <summary>Adds a rubric question with structured instructions whose levels are built through a sub-builder lambda.</summary>
+    /// <param name="id">The unique identifier for the question.</param>
+    /// <param name="instructions">The structured instructions for what to evaluate.</param>
+    /// <param name="levels">The sub-builder delegate configuring rubric levels.</param>
+    /// <returns>This builder instance for chaining.</returns>
     public QuestionBuilder Score(string id, TypeSafeContent instructions, Func<ScoreLevels, ScoreLevels> levels)
     {
         ArgumentNullException.ThrowIfNull(levels);
@@ -136,7 +185,6 @@ public sealed class QuestionBuilder
             ?? throw new ArgumentException("The levels lambda must return the levels builder.", nameof(levels));
         return Add(id, new Score { Instructions = instructions, Criteria = scoreLevels.ToCriteria() });
     }
-
 
     private QuestionBuilder Add(string id, TypeSafeQuestion question)
     {
@@ -168,6 +216,9 @@ public sealed class ChoiceOptions
     }
 
     /// <summary>Adds an option; a null description leaves the label undescribed.</summary>
+    /// <param name="label">The option label name.</param>
+    /// <param name="description">Optional description explaining the option.</param>
+    /// <returns>This options builder instance for chaining.</returns>
     public ChoiceOptions Option(string label, TypeSafeContent? description = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(label);
@@ -190,6 +241,8 @@ public sealed class ScoreLevels
     }
 
     /// <summary>Adds one rubric level; plain strings convert implicitly.</summary>
+    /// <param name="level">The rubric level content.</param>
+    /// <returns>This levels builder instance for chaining.</returns>
     public ScoreLevels Level(TypeSafeContent level)
     {
         ArgumentNullException.ThrowIfNull(level);

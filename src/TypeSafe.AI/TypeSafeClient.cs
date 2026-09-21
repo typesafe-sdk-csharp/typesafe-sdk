@@ -2,6 +2,8 @@ using System.Diagnostics;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Polly.Timeout;
+using Polly;
+using Microsoft.Extensions.Http.Resilience;
 
 namespace TypeSafe.AI;
 
@@ -11,12 +13,17 @@ internal static partial class TypeSafeDiagnostics
     public static readonly ActivitySource Source = new(SourceName, SourceVersion);
 }
 
-/// <summary>System One client. Supports both caller-owned and self-owned HTTP transport.
+/// <summary>
+/// System One client implementation for TypeSafe AI. Supports both caller-owned and self-owned HTTP transport.
 /// When created via <see cref="Create(TypeSafeClientOptions)"/>, the client owns the
 /// <see cref="HttpClient"/> and disposes it. When constructed directly, the caller retains
-/// ownership and is responsible for the transport's lifetime.</summary>
+/// ownership and is responsible for the transport's lifetime.
+/// </summary>
 public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
 {
+    /// <summary>
+    /// The logical HTTP client name used when registering and resolving TypeSafe transports with IHttpClientFactory.
+    /// </summary>
     public const string HttpClientName = "TypeSafe";
     internal const string RequestPath = "v1/systemone";
     private readonly HttpClient _client;
@@ -25,8 +32,12 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
     private readonly bool _ownsClient;
     private bool _disposed;
 
-    /// <summary>Uses the supplied client without changing or disposing it. The caller configures
-    /// its handler chain; this constructor does not install retry or per-attempt timeout handlers.</summary>
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TypeSafeClient"/> class using a caller-provided <see cref="HttpClient"/>.
+    /// The caller retains ownership of the transport lifetime; this constructor does not install retry or per-attempt timeout handlers.
+    /// </summary>
+    /// <param name="client">The HTTP client to use for sending requests.</param>
+    /// <param name="options">Configuration options for the TypeSafe client.</param>
     public TypeSafeClient(HttpClient client, TypeSafeClientOptions options)
         : this(client, TypeSafeClientSettings.Create(options), ownsClient: false) { }
 
@@ -39,16 +50,32 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
         _ownsClient = ownsClient;
     }
 
-    /// <summary>Creates a self-contained client that owns its <see cref="HttpClient"/>.
-    /// Dispose this instance when finished to release the underlying connection resources.</summary>
+    /// <summary>
+    /// Creates a self-contained client that owns its <see cref="HttpClient"/> and resilience pipeline.
+    /// Dispose this instance when finished to release the underlying connection resources.
+    /// </summary>
+    /// <param name="options">Configuration options for the TypeSafe client.</param>
+    /// <returns>A new owned <see cref="TypeSafeClient"/> instance.</returns>
     public static TypeSafeClient Create(TypeSafeClientOptions options)
     {
         ArgumentNullException.ThrowIfNull(options);
         var settings = TypeSafeClientSettings.Create(options);
-        var client = new HttpClient { Timeout = Timeout.InfiniteTimeSpan };
+        return CreateOwned(settings, new SocketsHttpHandler { AllowAutoRedirect = false });
+    }
+
+    internal static TypeSafeClient CreateOwned(TypeSafeClientSettings settings, HttpMessageHandler primaryHandler)
+    {
+        var pipeline = new ResiliencePipelineBuilder<HttpResponseMessage>();
+        TypeSafeResiliencePipeline.Configure(pipeline, settings);
+        var handler = new ResilienceHandler(pipeline.Build())
+        {
+            InnerHandler = primaryHandler
+        };
+        var client = new HttpClient(handler, disposeHandler: true) { Timeout = Timeout.InfiniteTimeSpan };
         return new TypeSafeClient(client, settings, ownsClient: true);
     }
 
+    /// <inheritdoc />
     public Task<SystemOneResponse> SystemOneAsync(TypeSafeContent state,
         IReadOnlyDictionary<string, TypeSafeQuestion> questions, string? model = null,
         CancellationToken cancellationToken = default)
@@ -58,6 +85,7 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
         return SystemOneAsync(request, cancellationToken);
     }
 
+    /// <inheritdoc />
     public async Task<SystemOneResponse> SystemOneAsync(SystemOneRequest request,
         CancellationToken cancellationToken = default)
     {
@@ -155,9 +183,11 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
         };
     }
 
-    /// <summary>Disposes the underlying <see cref="HttpClient"/> if this instance owns it
+    /// <summary>
+    /// Disposes the underlying <see cref="HttpClient"/> if this instance owns it
     /// (i.e. was created via <see cref="Create(TypeSafeClientOptions)"/>). Calling
-    /// <see cref="SystemOneAsync"/> after disposal throws <see cref="ObjectDisposedException"/>.</summary>
+    /// <see cref="SystemOneAsync(SystemOneRequest, CancellationToken)"/> after disposal throws <see cref="ObjectDisposedException"/>.
+    /// </summary>
     public void Dispose()
     {
         if (_disposed) return;
@@ -166,3 +196,5 @@ public sealed class TypeSafeClient : ITypeSafeClient, IDisposable
             _client.Dispose();
     }
 }
+
+
