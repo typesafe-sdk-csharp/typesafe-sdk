@@ -6,9 +6,10 @@ using Xunit;
 namespace TypeSafe.AI.Tests;
 
 /// <summary>
-/// PLAN §10 (client half): the evaluation ActivitySource records model, usage, status, and
-/// request-id metadata, parents to the ambient activity, and its tag values are sanitized —
-/// never state text, question text, credentials, or provider error bodies.
+/// Verifies OpenTelemetry tracing for the TypeSafe client: the evaluation ActivitySource
+/// records model, usage, status, and request-id metadata, parents to the ambient activity,
+/// and ensures its tag values are sanitized so that sensitive payloads (state text,
+/// question text, credentials, or provider error bodies) are never recorded.
 /// </summary>
 /// <remarks>
 /// The ActivityListener is process-global and the test suite runs classes in parallel, so each
@@ -17,7 +18,7 @@ namespace TypeSafe.AI.Tests;
 public class TypeSafeTelemetryTests : IDisposable
 {
     private readonly ActivityListener _listener;
-    private readonly List<Activity> _activities = [];
+    private readonly System.Collections.Concurrent.ConcurrentBag<Activity> _activities = [];
 
     public TypeSafeTelemetryTests()
     {
@@ -78,7 +79,7 @@ public class TypeSafeTelemetryTests : IDisposable
 
         var activity = OwnActivity(modelTag);
         Assert.Equal(ActivityStatusCode.Error, activity.Status);
-        // The status description is the exception type name only — no provider body, no credential.
+        // The status description is the exception type name only - no provider body, no credential.
         Assert.Equal("TypeSafeAuthenticationException", activity.StatusDescription);
         Assert.DoesNotContain("sk-test", activity.StatusDescription, StringComparison.Ordinal);
         foreach (var tag in activity.Tags)
@@ -111,3 +112,4 @@ public class TypeSafeTelemetryTests : IDisposable
         Assert.Equal(parent.SpanId, child.ParentSpanId);
     }
 }
+

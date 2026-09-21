@@ -5,6 +5,7 @@
     <Description>Core .NET integration for TypeSafe AI: verification, question building, and evaluation.</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageTags>typesafe;ai;llm;guardrails;verification;evals</PackageTags>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <None Include="../../README.md" Pack="true" PackagePath="\"/>

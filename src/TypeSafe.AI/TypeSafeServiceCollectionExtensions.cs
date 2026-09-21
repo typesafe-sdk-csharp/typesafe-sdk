@@ -16,10 +16,19 @@ internal sealed class TypeSafeOptionsValidator : IValidateOptions<TypeSafeClient
     }
 }
 
-/// <summary>Registers a factory-managed HTTP transport. Precedence: defaults, environment,
-/// TypeSafe configuration section, then callback. Resolve the typed client as transient.</summary>
+/// <summary>
+/// Extension methods for configuring and registering <see cref="ITypeSafeClient"/> in an <see cref="IServiceCollection"/>.
+/// Configuration precedence: built-in defaults, environment variables, optional IConfiguration section ("TypeSafe"), then explicit callback.
+/// </summary>
 public static class TypeSafeServiceCollectionExtensions
 {
+    /// <summary>
+    /// Registers the <see cref="ITypeSafeClient"/> and its resilient <see cref="HttpClient"/> transport with the service collection.
+    /// </summary>
+    /// <param name="services">The service collection to add registrations to.</param>
+    /// <param name="configuration">Optional root configuration containing a "TypeSafe" section.</param>
+    /// <param name="configure">Optional delegate to configure <see cref="TypeSafeClientOptions"/> programmatically.</param>
+    /// <returns>An <see cref="IHttpClientBuilder"/> for configuring the underlying HTTP client.</returns>
     public static IHttpClientBuilder AddTypeSafeClient(this IServiceCollection services,
         IConfiguration? configuration = null, Action<TypeSafeClientOptions>? configure = null)
     {
@@ -44,6 +53,12 @@ public static class TypeSafeServiceCollectionExtensions
             new TypeSafeClient(client, provider.GetRequiredService<TypeSafeClientSettings>()));
     }
 
+    /// <summary>
+    /// Registers the <see cref="ITypeSafeClient"/> and its resilient <see cref="HttpClient"/> transport with the service collection.
+    /// </summary>
+    /// <param name="services">The service collection to add registrations to.</param>
+    /// <param name="configure">A delegate to configure <see cref="TypeSafeClientOptions"/> programmatically.</param>
+    /// <returns>An <see cref="IHttpClientBuilder"/> for configuring the underlying HTTP client.</returns>
     public static IHttpClientBuilder AddTypeSafeClient(this IServiceCollection services, Action<TypeSafeClientOptions> configure)
         => AddTypeSafeClient(services, configuration: null, configure);
 

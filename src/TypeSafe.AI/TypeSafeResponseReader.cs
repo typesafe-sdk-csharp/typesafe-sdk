@@ -1,14 +1,6 @@
-using System.Text.Json;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json;
 
 namespace TypeSafe.AI;
-
-internal sealed record SystemOneResponseWire
-{
-    public required string Model { get; init; }
-    public required IReadOnlyDictionary<string, JsonElement> Answers { get; init; }
-    public required TypeSafeUsage Usage { get; init; }
-}
 
 internal static class TypeSafeResponseReader
 {
@@ -16,21 +8,13 @@ internal static class TypeSafeResponseReader
     {
         try
         {
-            var wire = await JsonSerializer.DeserializeAsync(stream,
-                TypeSafeJsonContext.Default.SystemOneResponseWire, token).ConfigureAwait(false)
+            var response = await JsonSerializer.DeserializeAsync(stream,
+                TypeSafeJsonContext.Default.SystemOneResponse, token).ConfigureAwait(false)
                 ?? throw new JsonException("The response must be an object.");
-            var answers = new Dictionary<string, TypeSafeAnswer>(wire.Answers.Count);
-            foreach (var (id, element) in wire.Answers)
-            {
-                if (element.ValueKind != JsonValueKind.Object ||
-                    !element.TryGetProperty("type", out var type) || type.ValueKind != JsonValueKind.String)
-                    throw new JsonException("An answer requires a string type discriminator.");
-                var kind = type.GetString()!;
-                answers.Add(id, kind is "noul" or "choice" or "score"
-                    ? element.Deserialize(TypeSafeJsonContext.Default.TypeSafeAnswer)!
-                    : new UnknownAnswer { Type = kind, Raw = element.Clone() });
-            }
-            return new SystemOneResponse(wire.Model, answers, wire.Usage, requestId);
+
+            return (requestId is not null && response.RequestId != requestId)
+                ? new SystemOneResponse(response.Model, response.Answers, response.Usage, requestId)
+                : response;
         }
         catch (JsonException exception)
         {
